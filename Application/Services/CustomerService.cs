@@ -1,4 +1,4 @@
-﻿using Application.Dto;
+using Application.Dto;
 using Application.RepositoryInterfaces;
 using Application.ServiceInterfaces;
 using AutoMapper;
@@ -9,11 +9,19 @@ using System.Threading.Tasks;
 
 namespace Application.Services
 {
+    /// <summary>
+    /// Provides services related to managing customers.
+    /// </summary>
     public class CustomerService : ICustomerService
     {
         private readonly IMapper _mapper;
         private readonly IGenericRepository<Customer> _customerRepository;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CustomerService"/> class.
+        /// </summary>
+        /// <param name="customerRepository">The repository for accessing customer data.</param>
+        /// <param name="mapper">The mapper for mapping between entities and DTOs.</param>
         public CustomerService(
             IGenericRepository<Customer> customerRepository,
             IMapper mapper
@@ -23,23 +31,37 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        #region Customer
+        #region Customer Operations
 
+        /// <summary>
+        /// Retrieves all customers.
+        /// </summary>
+        /// <returns>A list of customer DTOs.</returns>
         public async Task<List<CustomerDto>> GetAllCustomers()
         {
             var items = _customerRepository.GetAll().Result.ToList();
             return _mapper.Map<List<Customer>, List<CustomerDto>>(items);
         }
 
-        public async Task<CustomerDto> GetCustomer(int ID)
+        /// <summary>
+        /// Retrieves a customer by ID.
+        /// </summary>
+        /// <param name="id">The id of the customer to retrieve.</param>
+        /// <returns>The customer DTO.</returns>
+        public async Task<CustomerDto> GetCustomer(int id)
         {
-            var item = _customerRepository.GetFirst(x => x.ID == ID);
+            var item = _customerRepository.GetFirst(x => x.ID == id);
             return _mapper.Map<Customer, CustomerDto>(item);
         }
 
-        public async Task<CustomerDto> DeleteCustomer(int ID)
+        /// <summary>
+        /// Deletes a customer by id.
+        /// </summary>
+        /// <param name="id">The id of the customer to delete.</param>
+        /// <returns>The deleted customer DTO.</returns>
+        public async Task<CustomerDto> DeleteCustomer(int id)
         {
-            var item = _customerRepository.GetFirst(x => x.ID == ID);
+            var item = _customerRepository.GetFirst(x => x.ID == id);
             if (item != null)
             {
                 _customerRepository.Delete(item);
@@ -48,22 +70,27 @@ namespace Application.Services
             return _mapper.Map<Customer, CustomerDto>(item);
         }
 
-        public async Task<CustomerDto> UpsertCustomer(CustomerDto item)
+        /// <summary>
+        /// Inserts or updates a customer.
+        /// </summary>
+        /// <param name="customer">The customer DTO to insert or update.</param>
+        /// <returns>The inserted or updated customer DTO.</returns>
+        public async Task<CustomerDto> UpsertCustomer(CustomerDto customer)
         {
             Customer DBitem;
-            if (item.ID == 0)
+            if (customer.ID == 0)
             {
-                DBitem = _mapper.Map<CustomerDto, Customer>(item);
+                DBitem = _mapper.Map<CustomerDto, Customer>(customer);
                 await _customerRepository.Add(DBitem);
             }
             else
             {
-                DBitem = _customerRepository.GetFirst(x => x.ID == item.ID);
+                DBitem = _customerRepository.GetFirst(x => x.ID == customer.ID);
                 if (DBitem != null)
                 {
-                    item.CreatedDate = DBitem.CreatedDate;
-                    item.CreatedBy = DBitem.CreatedBy;
-                    DBitem = _mapper.Map<CustomerDto, Customer>(item, DBitem);
+                    customer.CreatedDate = DBitem.CreatedDate;
+                    customer.CreatedBy = DBitem.CreatedBy;
+                    DBitem = _mapper.Map<CustomerDto, Customer>(customer, DBitem);
                     _customerRepository.Update(DBitem);
                 }
             }
@@ -72,6 +99,6 @@ namespace Application.Services
             return _mapper.Map<Customer, CustomerDto>(DBitem);
         }
 
-        #endregion Customer
+        #endregion
     }
 }
